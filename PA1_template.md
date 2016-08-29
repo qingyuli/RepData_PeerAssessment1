@@ -1,0 +1,129 @@
+# Reproducible Research: Peer Assessment 1
+
+
+## Loading and preprocessing the data
+
+```r
+getwd()
+```
+
+```
+## [1] "/Users/qingyuli/datasciencecoursera/5.Reproducible_Research/RepData_PeerAssessment1"
+```
+
+```r
+data<- read.table("activity.csv",header=T, sep=",",na.strings ="NA")
+```
+
+## What is mean total number of steps taken per day?
+
+
+```r
+a<-aggregate(steps~date, data=data, sum)
+```
+
+1. Make a histogram of the total number of steps taken each day
+
+```r
+hist(a$steps,xlab="Total Number of Steps Taken Each Day",ylab="Days", main="")
+abline(v=mean(a$steps),lwd=4)
+abline(v=median(a$steps),lwd=4)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
+2. Calculate and report the mean and median total number of steps taken per day
+
+
+```r
+mean(a$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
+median(a$steps)
+```
+
+```
+## [1] 10765
+```
+
+## What is the average daily activity pattern?
+1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+```r
+b<-aggregate(steps~interval, data=data, mean)
+plot(b$interval,b$steps,type="l",xlab="Interval" ,ylab="Number of steps")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```r
+b[which.max(b$steps),]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
+```
+
+## Imputing missing values
+
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+
+```r
+sum(is.na(data$steps))
+```
+
+```
+## [1] 2304
+```
+2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+```r
+c<- merge(data,b, by.x="interval",by.y="interval")
+```
+3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```r
+c$steps<-ifelse(is.na(c$steps.x), c$steps.y, c$steps.x)
+```
+4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+```r
+d<-aggregate(steps~date, data=c, sum)
+hist(d$steps,xlab="Total Number of Steps Taken Each Day",ylab="Days", main="")
+abline(v=mean(d$steps),lwd=4)
+abline(v=median(d$steps),lwd=4)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+Conclusion: Imputing missing data will increase the estimates of the total daily number of steps.
+
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+1. Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+
+```r
+c$level <- ifelse(weekdays(as.Date.character(c$date))=="Saturday"|
+                 weekdays(as.Date.character(c$date))=="Sunday", "weekend", "weekday")
+```
+2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using simulated data:
+
+```r
+weekend<-c[c$level=="weekend",]
+weekday<-c[c$level=="weekday",]
+weekend2<-aggregate(steps~interval, data=weekend, mean)
+weekday2<-aggregate(steps~interval, data=weekday, mean)
+par(mfrow=c(2,1),mar=c(3,4,1,0))
+plot(weekend2$interval,weekend2$steps,type="l",xlab="interval", ylab="Number of steps", main="Weekend")
+plot(weekday2$interval,weekday2$steps,type="l",xlab="interval", ylab="Number of steps", main="Weekday")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
